@@ -20,13 +20,16 @@ if uploaded:
     features_df = engineer_features(raw_df)
     X_scaled, scaler = scale_features(features_df)
 
+    # Predictions
     risk_levels = predict_risk(X_scaled)
     result_df = raw_df.assign(Risk_Level=risk_levels)
 
+    # Layout
     col1, col2 = st.columns((2, 1))
     with col1:
         st.subheader("Risk Level Distribution")
-        dist = result_df['Risk_Level'].value_counts().reindex(model.classes_)
+        # Plot the actual label counts
+        dist = result_df['Risk_Level'].value_counts()
         st.bar_chart(dist)
 
         st.subheader("Feature Importances")
@@ -38,10 +41,11 @@ if uploaded:
             temp = raw_df.copy()
             temp['Risk_Level'] = risk_levels
             temp['order_date'] = pd.to_datetime(temp['order_date'])
-            trend = temp.groupby([pd.Grouper(key='order_date', freq='M'), 'Risk_Level']).size().unstack().fillna(0)
+            trend = temp.groupby([pd.Grouper(key='order_date', freq='M'), 'Risk_Level']) \
+                        .size().unstack().fillna(0)
             st.line_chart(trend)
         else:
-            st.info("Include 'order_date' for time trend.")
+            st.info("Include 'order_date' for time trend visualization.")
 
     with col2:
         st.subheader("Key Metrics Summary")
